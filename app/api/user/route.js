@@ -1,29 +1,53 @@
 import { NextResponse } from 'next/server';
 import connectDb from '@/db/connectdb';
 import jwt from 'jsonwebtoken'
-import { configDotenv } from 'dotenv';
+import User from '@/models/user'
 
 export async function POST(req){
+    try {
+        
+   
 const { name,email,password }=await req.json();
   if (!email || !password || !name) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 // Use connect method to connect to the server
-  await connectDb.connect();
+  await connectDb();
   console.log('Connected successfully to server');
-  const db = connectDb.db(Pollmandu);
-  const collection = db.collection('users');
+// check for the existing user
+ const existingUser = await User.findOne({ email });
+if (existingUser) {
+  const payload={
+  id:existingUser._id.toString(),
+  email:existingUser.email,
+  name:existingUser.name,
+  };
+  const token=jwt.sign(payload,process.env.JWT_SEC,{expiresIn: '30d'});
+
+  return NextResponse.json({token,user:payload});
+}
 
 
-//insert the user
-const result=await collection.insertOne({name,email,password})
-const userid=result.userid;
+
+//create the user
+const  newUser=await User.create({name,email,password})
+
 
 //generate JWT with mongodb
-const token=jwt.sign()
+const payload={
+    id: newUser._id.toString(),
+    email,
+    name
+}
+const token=jwt.sign(payload,process.env.JWT_SEC,{expiresIn: '30d'})
 
-console.log("received data:",data);
 
-  return NextResponse.json({ success: true});
+  return NextResponse.json({token,user:{ id: newUser._id.toString(),
+    email,
+    name}});
+   } catch (error) {
+        console.log("there is an error",error);
+        return NextResponse.json({Error:'Server responded with error'},{status:500})
+    }
 
 }
