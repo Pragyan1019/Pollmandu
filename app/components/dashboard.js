@@ -20,14 +20,15 @@ router.push('/Login')
 return;
       }
 
-const res=await fetch('/api/auth/verify',{
+const res=await fetch('api/auth/verify',{
   method:'GET',
 headers:{
-  'Authorization':`Bearer ${token}`
+  'Authorization':`Bearer ${token}` //bearer <token>
 }})
 const data=await res.json();
 if(res.ok){
   setUser(data.user)
+  console.log(data)
 }    
 else{
   localStorage.removeItem('token')
@@ -42,7 +43,6 @@ router.push('/login')
       <div className='w-[80%] mx-auto flex flex-col'>
         
        <span className='text-2xl'>A place to interact with the help of presentations.</span>  
-      
       </div>
        <div className="buttons flex gap-7 p-10 w-[80%] mx-auto">
         
